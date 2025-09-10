@@ -83,6 +83,47 @@ const COMMA: CGKeyCode = 43;
 const DOT: CGKeyCode = 47;
 const SLASH: CGKeyCode = 44;
 
+// Navigation keys
+const DELETE: CGKeyCode = 117; // ForwardDelete
+const HOME: CGKeyCode = 115;
+const END: CGKeyCode = 119;
+const PAGE_UP: CGKeyCode = 116;
+const PAGE_DOWN: CGKeyCode = 121;
+const INSERT: CGKeyCode = 114; // Help/Insert
+
+// Extended function keys
+const F13: CGKeyCode = 105;
+const F14: CGKeyCode = 107;
+const F15: CGKeyCode = 113;
+const F16: CGKeyCode = 106;
+const F17: CGKeyCode = 64;
+const F18: CGKeyCode = 79;
+const F19: CGKeyCode = 80;
+const F20: CGKeyCode = 90;
+
+// Keypad keys
+const KP_0: CGKeyCode = 82;
+const KP_1: CGKeyCode = 83;
+const KP_2: CGKeyCode = 84;
+const KP_3: CGKeyCode = 85;
+const KP_4: CGKeyCode = 86;
+const KP_5: CGKeyCode = 87;
+const KP_6: CGKeyCode = 88;
+const KP_7: CGKeyCode = 89;
+const KP_8: CGKeyCode = 91;
+const KP_9: CGKeyCode = 92;
+const KP_DECIMAL: CGKeyCode = 65;
+const KP_MULTIPLY: CGKeyCode = 67;
+const KP_PLUS: CGKeyCode = 69;
+const KP_DIVIDE: CGKeyCode = 75;
+const KP_MINUS: CGKeyCode = 78;
+const KP_EQUALS: CGKeyCode = 81;
+const KP_CLEAR: CGKeyCode = 71;
+const KP_ENTER: CGKeyCode = 76;
+
+// International keys
+const INTL_BACKSLASH: CGKeyCode = 10; // SectionSign
+
 pub fn code_from_key(key: Key) -> Option<CGKeyCode> {
     match key {
         Key::Alt => Some(ALT),
@@ -96,6 +137,14 @@ pub fn code_from_key(key: Key) -> Option<CGKeyCode> {
         Key::F10 => Some(F10),
         Key::F11 => Some(F11),
         Key::F12 => Some(F12),
+        Key::F13 => Some(F13),
+        Key::F14 => Some(F14),
+        Key::F15 => Some(F15),
+        Key::F16 => Some(F16),
+        Key::F17 => Some(F17),
+        Key::F18 => Some(F18),
+        Key::F19 => Some(F19),
+        Key::F20 => Some(F20),
         Key::F2 => Some(F2),
         Key::F3 => Some(F3),
         Key::F4 => Some(F4),
@@ -104,6 +153,12 @@ pub fn code_from_key(key: Key) -> Option<CGKeyCode> {
         Key::F7 => Some(F7),
         Key::F8 => Some(F8),
         Key::F9 => Some(F9),
+        Key::Delete => Some(DELETE),
+        Key::Home => Some(HOME),
+        Key::End => Some(END),
+        Key::PageUp => Some(PAGE_UP),
+        Key::PageDown => Some(PAGE_DOWN),
+        Key::Insert => Some(INSERT),
         Key::LeftArrow => Some(LEFT_ARROW),
         Key::MetaLeft => Some(META_LEFT),
         Key::MetaRight => Some(META_RIGHT),
@@ -161,6 +216,23 @@ pub fn code_from_key(key: Key) -> Option<CGKeyCode> {
         Key::Comma => Some(COMMA),
         Key::Dot => Some(DOT),
         Key::Slash => Some(SLASH),
+        Key::IntlBackslash => Some(INTL_BACKSLASH),
+        Key::Kp0 => Some(KP_0),
+        Key::Kp1 => Some(KP_1),
+        Key::Kp2 => Some(KP_2),
+        Key::Kp3 => Some(KP_3),
+        Key::Kp4 => Some(KP_4),
+        Key::Kp5 => Some(KP_5),
+        Key::Kp6 => Some(KP_6),
+        Key::Kp7 => Some(KP_7),
+        Key::Kp8 => Some(KP_8),
+        Key::Kp9 => Some(KP_9),
+        Key::KpDelete => Some(KP_DECIMAL),
+        Key::KpReturn => Some(KP_ENTER),
+        Key::KpMinus => Some(KP_MINUS),
+        Key::KpPlus => Some(KP_PLUS),
+        Key::KpMultiply => Some(KP_MULTIPLY),
+        Key::KpDivide => Some(KP_DIVIDE),
         Key::Function => Some(FUNCTION),
         Key::Unknown(code) => code.try_into().ok(),
         _ => None,
@@ -174,12 +246,21 @@ pub fn key_from_code(code: CGKeyCode) -> Key {
         BACKSPACE => Key::Backspace,
         CAPS_LOCK => Key::CapsLock,
         CONTROL_LEFT => Key::ControlLeft,
+        CONTROL_RIGHT => Key::ControlRight,
         DOWN_ARROW => Key::DownArrow,
         ESCAPE => Key::Escape,
         F1 => Key::F1,
         F10 => Key::F10,
         F11 => Key::F11,
         F12 => Key::F12,
+        F13 => Key::F13,
+        F14 => Key::F14,
+        F15 => Key::F15,
+        F16 => Key::F16,
+        F17 => Key::F17,
+        F18 => Key::F18,
+        F19 => Key::F19,
+        F20 => Key::F20,
         F2 => Key::F2,
         F3 => Key::F3,
         F4 => Key::F4,
@@ -188,6 +269,12 @@ pub fn key_from_code(code: CGKeyCode) -> Key {
         F7 => Key::F7,
         F8 => Key::F8,
         F9 => Key::F9,
+        DELETE => Key::Delete,
+        HOME => Key::Home,
+        END => Key::End,
+        PAGE_UP => Key::PageUp,
+        PAGE_DOWN => Key::PageDown,
+        INSERT => Key::Insert,
         LEFT_ARROW => Key::LeftArrow,
         META_LEFT => Key::MetaLeft,
         META_RIGHT => Key::MetaRight,
@@ -245,6 +332,23 @@ pub fn key_from_code(code: CGKeyCode) -> Key {
         COMMA => Key::Comma,
         DOT => Key::Dot,
         SLASH => Key::Slash,
+        INTL_BACKSLASH => Key::IntlBackslash,
+        KP_0 => Key::Kp0,
+        KP_1 => Key::Kp1,
+        KP_2 => Key::Kp2,
+        KP_3 => Key::Kp3,
+        KP_4 => Key::Kp4,
+        KP_5 => Key::Kp5,
+        KP_6 => Key::Kp6,
+        KP_7 => Key::Kp7,
+        KP_8 => Key::Kp8,
+        KP_9 => Key::Kp9,
+        KP_DECIMAL => Key::KpDelete,
+        KP_ENTER => Key::KpReturn,
+        KP_MINUS => Key::KpMinus,
+        KP_PLUS => Key::KpPlus,
+        KP_MULTIPLY => Key::KpMultiply,
+        KP_DIVIDE => Key::KpDivide,
         FUNCTION => Key::Function,
         code => Key::Unknown(code.into()),
     }
