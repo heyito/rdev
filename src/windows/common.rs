@@ -60,6 +60,16 @@ pub unsafe fn convert(param: WPARAM, lpdata: LPARAM) -> Option<EventType> {
             let key = key_from_code(code as u16);
             Some(EventType::KeyRelease(key))
         }
+        Ok(WM_SYSKEYDOWN) => {
+            let code = get_code(lpdata);
+            let key = key_from_code(code as u16);
+            Some(EventType::KeyPress(key))
+        }
+        Ok(WM_SYSKEYUP) => {
+            let code = get_code(lpdata);
+            let key = key_from_code(code as u16);
+            Some(EventType::KeyRelease(key))
+        }
         Ok(WM_LBUTTONDOWN) => Some(EventType::ButtonPress(Button::Left)),
         Ok(WM_LBUTTONUP) => Some(EventType::ButtonRelease(Button::Left)),
         Ok(WM_MBUTTONDOWN) => Some(EventType::ButtonPress(Button::Middle)),
