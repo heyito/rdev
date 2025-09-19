@@ -62,13 +62,23 @@ pub unsafe fn convert(param: WPARAM, lpdata: LPARAM) -> Option<EventType> {
         }
         Ok(WM_SYSKEYDOWN) => {
             let code = get_code(lpdata);
-            let key = key_from_code(code as u16);
-            Some(EventType::KeyPress(key))
+            // Only process Alt (18) and AltGr (225) system key events
+            if code == 18 || code == 225 {
+                let key = key_from_code(code as u16);
+                Some(EventType::KeyPress(key))
+            } else {
+                None // Ignore other system keys
+            }        
         }
         Ok(WM_SYSKEYUP) => {
             let code = get_code(lpdata);
-            let key = key_from_code(code as u16);
-            Some(EventType::KeyRelease(key))
+            // Only process Alt (18) and AltGr (225) system key events
+            if code == 18 || code == 225 {
+                let key = key_from_code(code as u16);
+                Some(EventType::KeyRelease(key))
+            } else {
+                None // Ignore other system keys
+            }        
         }
         Ok(WM_LBUTTONDOWN) => Some(EventType::ButtonPress(Button::Left)),
         Ok(WM_LBUTTONUP) => Some(EventType::ButtonRelease(Button::Left)),
