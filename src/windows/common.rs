@@ -25,6 +25,10 @@ const LLKHF_INJECTED: DWORD = 0x10;
 const LLKHF_ALTDOWN: DWORD = 0x20;
 const LLKHF_UP: DWORD = 0x80;
 
+// Low-level mouse hook flags from MSLLHOOKSTRUCT.flags
+const LLMHF_INJECTED: DWORD = 0x01;
+const LLMHF_LOWER_IL_INJECTED: DWORD = 0x02;
+
 pub static mut HOOK: HHOOK = null_mut();
 lazy_static! {
     pub(crate) static ref KEYBOARD: Mutex<Keyboard> = Mutex::new(Keyboard::new().unwrap());
@@ -57,8 +61,35 @@ pub unsafe fn get_button_code(lpdata: LPARAM) -> WORD {
     let mouse = *(lpdata as *const MSLLHOOKSTRUCT);
     HIWORD(mouse.mouseData)
 }
+pub unsafe fn get_mouse_flags(lpdata: LPARAM) -> DWORD {
+    let mouse = *(lpdata as *const MSLLHOOKSTRUCT);
+    mouse.flags
+}
 
 pub unsafe fn convert(param: WPARAM, lpdata: LPARAM) -> Option<EventType> {
+    // Universal injection filtering - reject ALL injected events (keyboard and mouse)
+    // For real hardware input only, no synthetic/programmatic events
+    match param.try_into() {
+        // Check keyboard events for injection
+        Ok(WM_KEYDOWN) | Ok(WM_KEYUP) | Ok(WM_SYSKEYDOWN) | Ok(WM_SYSKEYUP) => {
+            let flags = get_flags(lpdata);
+            if (flags & LLKHF_INJECTED) != 0 {
+                return None; // Reject ALL injected keyboard events
+            }
+        }
+        // Check mouse events for injection
+        Ok(WM_LBUTTONDOWN) | Ok(WM_LBUTTONUP) | Ok(WM_MBUTTONDOWN) | Ok(WM_MBUTTONUP) |
+        Ok(WM_RBUTTONDOWN) | Ok(WM_RBUTTONUP) | Ok(WM_XBUTTONDOWN) | Ok(WM_XBUTTONUP) |
+        Ok(WM_MOUSEMOVE) | Ok(WM_MOUSEWHEEL) | Ok(WM_MOUSEHWHEEL) => {
+            let flags = get_mouse_flags(lpdata);
+            if (flags & LLMHF_INJECTED) != 0 {
+                return None; // Reject ALL injected mouse events
+            }
+        }
+        _ => {}
+    }
+
+    // Now process the events normally (all injected events already filtered out)
     match param.try_into() {
         Ok(WM_KEYDOWN) => {
             let code = get_code(lpdata);
@@ -74,20 +105,15 @@ pub unsafe fn convert(param: WPARAM, lpdata: LPARAM) -> Option<EventType> {
             let code = get_code(lpdata);
             let flags = get_flags(lpdata);
 
-            // Always process Alt and AltGr keys themselves
+            // Process Alt and AltGr keys themselves
             if code == 164 || code == 165 {
                 let key = key_from_code(code as u16);
                 Some(EventType::KeyPress(key))
             }
-            // Process other keys when Alt is down, but filter out spurious events
+            // Process other keys when Alt is down (injection already filtered above)
             else if (flags & LLKHF_ALTDOWN) != 0 {
-                // Filter out injected events to avoid spurious events
-                if (flags & LLKHF_INJECTED) == 0 {
-                    let key = key_from_code(code as u16);
-                    Some(EventType::KeyPress(key))
-                } else {
-                    None // Ignore injected events
-                }
+                let key = key_from_code(code as u16);
+                Some(EventType::KeyPress(key))
             } else {
                 None // Ignore other system keys when Alt is not down
             }
@@ -96,20 +122,15 @@ pub unsafe fn convert(param: WPARAM, lpdata: LPARAM) -> Option<EventType> {
             let code = get_code(lpdata);
             let flags = get_flags(lpdata);
 
-            // Always process Alt and AltGr keys themselves
+            // Process Alt and AltGr keys themselves
             if code == 164 || code == 165 {
                 let key = key_from_code(code as u16);
                 Some(EventType::KeyRelease(key))
             }
-            // Process other keys when Alt is down, but filter out spurious events
+            // Process other keys when Alt is down (injection already filtered above)
             else if (flags & LLKHF_ALTDOWN) != 0 {
-                // Filter out injected events to avoid spurious events
-                if (flags & LLKHF_INJECTED) == 0 {
-                    let key = key_from_code(code as u16);
-                    Some(EventType::KeyRelease(key))
-                } else {
-                    None // Ignore injected events
-                }
+                let key = key_from_code(code as u16);
+                Some(EventType::KeyRelease(key))
             } else {
                 None // Ignore other system keys when Alt is not down
             }
