@@ -14,10 +14,16 @@ use winapi::um::winuser::{
     SetWindowsHookExA, KBDLLHOOKSTRUCT, MSLLHOOKSTRUCT, WHEEL_DELTA, WH_KEYBOARD_LL, WH_MOUSE_LL,
     WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MBUTTONDOWN, WM_MBUTTONUP,
     WM_MOUSEHWHEEL, WM_MOUSEMOVE, WM_MOUSEWHEEL, WM_RBUTTONDOWN, WM_RBUTTONUP, WM_XBUTTONDOWN,
-    WM_XBUTTONUP,
+    WM_XBUTTONUP, WM_SYSKEYDOWN, WM_SYSKEYUP,
 };
 pub const TRUE: i32 = 1;
 pub const FALSE: i32 = 0;
+
+// Low-level keyboard hook flags from KBDLLHOOKSTRUCT.flags
+const LLKHF_EXTENDED: DWORD = 0x01;
+const LLKHF_INJECTED: DWORD = 0x10;
+const LLKHF_ALTDOWN: DWORD = 0x20;
+const LLKHF_UP: DWORD = 0x80;
 
 pub static mut HOOK: HHOOK = null_mut();
 lazy_static! {
@@ -31,6 +37,10 @@ pub unsafe fn get_code(lpdata: LPARAM) -> DWORD {
 pub unsafe fn get_scan_code(lpdata: LPARAM) -> DWORD {
     let kb = *(lpdata as *const KBDLLHOOKSTRUCT);
     kb.scanCode
+}
+pub unsafe fn get_flags(lpdata: LPARAM) -> DWORD {
+    let kb = *(lpdata as *const KBDLLHOOKSTRUCT);
+    kb.flags
 }
 pub unsafe fn get_point(lpdata: LPARAM) -> (LONG, LONG) {
     let mouse = *(lpdata as *const MSLLHOOKSTRUCT);
@@ -62,23 +72,47 @@ pub unsafe fn convert(param: WPARAM, lpdata: LPARAM) -> Option<EventType> {
         }
         Ok(WM_SYSKEYDOWN) => {
             let code = get_code(lpdata);
-            // Only process Alt (18) and AltGr (225) system key events
+            let flags = get_flags(lpdata);
+
+            // Always process Alt and AltGr keys themselves
             if code == 164 || code == 165 {
                 let key = key_from_code(code as u16);
                 Some(EventType::KeyPress(key))
+            }
+            // Process other keys when Alt is down, but filter out spurious events
+            else if (flags & LLKHF_ALTDOWN) != 0 {
+                // Filter out injected events to avoid spurious events
+                if (flags & LLKHF_INJECTED) == 0 {
+                    let key = key_from_code(code as u16);
+                    Some(EventType::KeyPress(key))
+                } else {
+                    None // Ignore injected events
+                }
             } else {
-                None // Ignore other system keys
-            }        
+                None // Ignore other system keys when Alt is not down
+            }
         }
         Ok(WM_SYSKEYUP) => {
             let code = get_code(lpdata);
-            // Only process Alt (18) and AltGr (225) system key events
+            let flags = get_flags(lpdata);
+
+            // Always process Alt and AltGr keys themselves
             if code == 164 || code == 165 {
                 let key = key_from_code(code as u16);
                 Some(EventType::KeyRelease(key))
+            }
+            // Process other keys when Alt is down, but filter out spurious events
+            else if (flags & LLKHF_ALTDOWN) != 0 {
+                // Filter out injected events to avoid spurious events
+                if (flags & LLKHF_INJECTED) == 0 {
+                    let key = key_from_code(code as u16);
+                    Some(EventType::KeyRelease(key))
+                } else {
+                    None // Ignore injected events
+                }
             } else {
-                None // Ignore other system keys
-            }        
+                None // Ignore other system keys when Alt is not down
+            }
         }
         Ok(WM_LBUTTONDOWN) => Some(EventType::ButtonPress(Button::Left)),
         Ok(WM_LBUTTONUP) => Some(EventType::ButtonRelease(Button::Left)),
