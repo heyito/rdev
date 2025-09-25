@@ -102,38 +102,16 @@ pub unsafe fn convert(param: WPARAM, lpdata: LPARAM) -> Option<EventType> {
             Some(EventType::KeyRelease(key))
         }
         Ok(WM_SYSKEYDOWN) => {
+            // Process ALL system keys (already filtered for injection above)
             let code = get_code(lpdata);
-            let flags = get_flags(lpdata);
-
-            // Process Alt and AltGr keys themselves
-            if code == 164 || code == 165 {
-                let key = key_from_code(code as u16);
-                Some(EventType::KeyPress(key))
-            }
-            // Process other keys when Alt is down (injection already filtered above)
-            else if (flags & LLKHF_ALTDOWN) != 0 {
-                let key = key_from_code(code as u16);
-                Some(EventType::KeyPress(key))
-            } else {
-                None // Ignore other system keys when Alt is not down
-            }
+            let key = key_from_code(code as u16);
+            Some(EventType::KeyPress(key))
         }
         Ok(WM_SYSKEYUP) => {
+            // Process ALL system keys (already filtered for injection above)
             let code = get_code(lpdata);
-            let flags = get_flags(lpdata);
-
-            // Process Alt and AltGr keys themselves
-            if code == 164 || code == 165 {
-                let key = key_from_code(code as u16);
-                Some(EventType::KeyRelease(key))
-            }
-            // Process other keys when Alt is down (injection already filtered above)
-            else if (flags & LLKHF_ALTDOWN) != 0 {
-                let key = key_from_code(code as u16);
-                Some(EventType::KeyRelease(key))
-            } else {
-                None // Ignore other system keys when Alt is not down
-            }
+            let key = key_from_code(code as u16);
+            Some(EventType::KeyRelease(key))
         }
         Ok(WM_LBUTTONDOWN) => Some(EventType::ButtonPress(Button::Left)),
         Ok(WM_LBUTTONUP) => Some(EventType::ButtonRelease(Button::Left)),
